@@ -59,6 +59,9 @@ if (!fs.existsSync(CONFIG.UPLOAD_DIR)) {
 }
 app.use('/uploads', express.static(CONFIG.UPLOAD_DIR));
 
+// Root status endpoint
+app.get('/', (req, res) => res.json({ status: 'CipherOps AI Backend Online', version: '1.0.0' }));
+
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
