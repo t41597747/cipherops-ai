@@ -31,9 +31,51 @@ app.use(helmet({
   crossOriginResourcePolicy: false, // allow static previews
 }));
 
-// CORS
+// CORS configuration
+const defaultLocalOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  'http://127.0.0.1:5173',
+];
+
+const rawConfiguredOrigins = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || '';
+const configuredOrigins = rawConfiguredOrigins
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+const isProduction = CONFIG.NODE_ENV === 'production';
+
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, Render health checks)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.replace(/\/+$/, '');
+
+    // Allow explicitly configured origins (e.g. Vercel deployment URL)
+    if (configuredOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    // Preserve local development access where appropriate
+    if (!isProduction) {
+      if (
+        defaultLocalOrigins.includes(normalizedOrigin) ||
+        /^http:\/\/localhost(:\d+)?$/.test(normalizedOrigin) ||
+        /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(normalizedOrigin)
+      ) {
+        return callback(null, true);
+      }
+    }
+
+    // In production without matching origin, reject
+    callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Demo-Role'],
 }));
