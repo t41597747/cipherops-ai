@@ -1,16 +1,22 @@
 # Dependencies
+node_modules
 node_modules/
 **/node_modules/
 
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-
-# Build output
+# Production build outputs
+dist
 dist/
+**/dist/
 build/
 coverage/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+!**/.env.example
 
 # Logs
 *.log
